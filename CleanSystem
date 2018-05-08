@@ -1,0 +1,28 @@
+#!/bin/bash
+. /efs/deploy/.corebuild
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $DIR
+. ./tested
+
+fleetctl stop ${buildobj}.timer
+fleetctl stop ${buildobj}.service
+fleetctl unload ${buildobj}.timer
+fleetctl unload ${buildobj}.service
+fleetctl destroy ${buildobj}.timer
+fleetctl destroy ${buildobj}.service
+
+sleep 4
+
+
+CORELIST=($(get_corehosts))
+for d in "${CORELIST[@]}" ; do
+	sleep 3
+	ssh ${d}.${overlay} "docker rmi registry:5000/${buildobj}:${buildstage}"
+	done
+echo "done. "
+
+exit
+
+
+

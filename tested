@@ -1,0 +1,13 @@
+#!/bin/bash
+
+. /efs/deploy/.corebuild
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+onbuild=$(echo $DIR | cut -d '/' -f 4-) 
+buildit=$(echo $onbuild | cut -d '/' -f 1 | cut -d '.' -f 2) 
+buildobj=$(echo $onbuild | cut -d '/' -f 2 | cut -d '.' -f 2) 
+buildstage="latest"
+echo "$DIR working dir for var buildit: $buildit for buildobj: $buildobj"
+echo "in overlay network $overlay"
+echo "image tag buildstage:$buildstage "
+
+

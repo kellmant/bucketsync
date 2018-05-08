@@ -1,0 +1,35 @@
+#!/bin/bash
+set -a
+source /.IPS
+
+  jobstart "$$"
+  trap "jobtrace '$$'" 0 1 2 3 6
+
+BUCKET_NAME="${overlay}.seclabv5.sync"
+echo "Checking if S3 backup bucket exists..."   
+S3_CHECK=$(aws s3 ls "s3://${BUCKET_NAME}" 2>&1)  
+#Some sort of error happened with s3 check 
+if [ $? != 0 ]  
+then 
+  NO_BUCKET_CHECK=$(echo $S3_CHECK | grep -c 'NoSuchBucket') 
+  if [ $NO_BUCKET_CHECK = 1 ]; then 
+    msgbus "Sync to Bucket that does not exist, attempting to create one."
+    aws s3 mb s3://${BUCKET_NAME}  
+    msgbus "First time for sync, creating bucket ${BUCKET_NAME}"
+  else 
+    msgbus "Error checking S3 Bucket $S3_CHECK" 
+    exit 1 
+  fi 
+else
+  echo "Bucket exists" 
+  echo "syncing to ${BUCKET_NAME}"
+  msgbus "Starting bucket sync of efs"
+  aws s3 sync /efs/backup s3://${BUCKET_NAME}/backup --delete
+  aws s3 sync /efs/deploy s3://${BUCKET_NAME}/deploy --delete
+  aws s3 sync /efs/home s3://${BUCKET_NAME}/home --delete
+  aws s3 sync /efs/services s3://${BUCKET_NAME}/services --delete
+  aws s3 sync /efs/session s3://${BUCKET_NAME}/session --delete
+  aws s3 sync /efs/share s3://${BUCKET_NAME}/share --delete
+  aws s3 sync /efs/vol s3://${BUCKET_NAME}/vol --delete
+  msgbus "Finished bucket sync of efs"
+  fi 

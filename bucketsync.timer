@@ -1,0 +1,8 @@
+[Unit]
+Description=efs %p of efs backup every 2 hours
+
+[Timer]
+OnBootSec=10m
+OnUnitActiveSec=2h
+Unit=bucketsync.service
+

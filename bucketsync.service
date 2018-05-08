@@ -1,0 +1,26 @@
+[Unit]
+Description=efs %p of efs
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Type=oneshot
+KillMode=none
+
+# PreStart
+ExecStartPre=-/bin/bash -c 'etcdctl set stream "%H | $(date +\"%%a %%r\") | %N container coming ONLINE "'
+ExecStartPre=-/usr/bin/docker pull registry:5000/%p:latest
+
+# Start
+ExecStart=/usr/bin/docker run --rm -h %p --name %p -e TZ="America/Toronto" -v /efs:/efs registry:5000/%p:latest
+
+# Stop
+ExecStop=-/bin/bash -c 'etcdctl set stream "%H | $(date +\"%%a %%r\") | %N container going OFFLINE "'
+ExecStopPost=-/bin/bash -c 'etcdctl set ops/efs/%p "$(date)"'
+
+# PostStop
+ExecStopPost=-/usr/bin/docker stop %p
+ExecStopPost=-/usr/bin/docker rm %p
+
+[X-Fleet]
+MachineOf=bucketsync.timer
